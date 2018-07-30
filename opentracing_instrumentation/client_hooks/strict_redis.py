@@ -36,7 +36,7 @@ except ImportError:  # pragma: no cover
 # regex to match an ipv4 address
 IPV4_RE = re.compile(r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$')
 
-METHOD_NAMES = ['execute_command', 'get', 'set', 'setex', 'setnx']
+METHOD_NAMES = ['execute_command', 'exists', 'get', 'set', 'setex', 'setnx']
 ORIG_METHODS = {}
 
 
@@ -69,6 +69,10 @@ def install_patches():
 
     for name in METHOD_NAMES:
         ORIG_METHODS[name] = getattr(redis.StrictRedis, name)
+
+    def exists(self, name, **kwargs):
+        self._extra_tags = [('redis.key', name)]
+        return ORIG_METHODS['exists'](self, name, **kwargs)
 
     def get(self, name, **kwargs):
         self._extra_tags = [('redis.key', name)]
